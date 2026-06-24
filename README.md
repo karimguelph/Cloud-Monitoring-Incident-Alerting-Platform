@@ -1,37 +1,470 @@
-# Cloud-Monitoring-Incident-Alerting-Platform
+# Cloud Monitoring & Incident Alerting Platform
 
-Currently building a cloud monitoring and alerting platform on AWS to learn more about cloud engineering, monitoring, automation, and event-driven systems.
+A cloud-native, event-driven monitoring platform built on AWS that processes infrastructure telemetry, detects operational incidents in real time, and automates alerting workflows using fully managed serverless services. The platform demonstrates how modern monitoring systems can be designed using an event-driven architecture while provisioning the entire cloud infrastructure through Infrastructure as Code (IaC) with AWS CDK.
 
-The idea is to simulate services sending telemetry data (errors, latency spikes, failures, etc.) and process everything using AWS serverless services.
+---
 
-## Planned Stack
+# Overview
 
-- AWS Lambda
-- API Gateway
-- DynamoDB
-- EventBridge
-- SNS / SQS
-- CloudWatch
-- AWS CDK
-- GitHub Actions
+Modern cloud applications generate thousands of telemetry events every minute. Metrics such as CPU utilization, memory consumption, request latency, and disk usage must be continuously monitored to detect failures before they affect users.
 
-## Current Progress
+Traditional monitoring platforms often rely on continuously polling infrastructure or maintaining dedicated monitoring servers. This project explores a serverless alternative by leveraging AWS managed services to process telemetry events, evaluate system health, generate incidents, notify downstream systems, and maintain a persistent history of operational events.
 
-Just getting started.
+Instead of maintaining dedicated infrastructure, every component automatically scales according to incoming workload, reducing operational overhead while remaining highly available.
 
-### First setup steps:
-- Create AWS Free Tier account
-- Enable MFA
-- Create IAM admin user
-- Install:
-  - Node.js
-  - AWS CLI
-  - AWS CDK
-- Configure billing alerts
-- Create GitHub repo
+---
 
-## First Goal
+# Project Objectives
 
-Deploy my first AWS Lambda using CDK.
+This project was designed to demonstrate practical experience with:
 
-After that, I’ll slowly expand the project into a more complete monitoring and incident platform.
+- Building event-driven cloud architectures
+    
+- Developing serverless applications using AWS Lambda
+    
+- Processing telemetry events in real time
+    
+- Automating incident detection workflows
+    
+- Designing loosely coupled distributed systems
+    
+- Provisioning infrastructure using AWS CDK
+    
+- Implementing CI/CD using GitHub Actions
+    
+- Applying cloud-native architectural patterns
+    
+
+---
+
+# System Architecture
+
+> **Architecture Diagram Placeholder**
+
+_Insert architecture diagram here (`docs/architecture.png`)_
+
+The platform follows an event-driven architecture where telemetry is processed asynchronously rather than through traditional polling.
+
+High-level workflow:
+
+```text
+Telemetry Source
+        │
+        ▼
+ EventBridge Event Bus
+        │
+        ▼
+ AWS Lambda
+Telemetry Processor
+        │
+ ┌──────┴───────────────┐
+ │                      │
+ ▼                      ▼
+DynamoDB             SNS Topic
+Incident Store       Alert Notification
+ │                      │
+ ▼                      ▼
+CloudWatch          SQS Queue
+                     │
+                     ▼
+             Downstream Consumers
+```
+
+Each AWS service performs a dedicated responsibility, resulting in a loosely coupled system that is easier to scale, maintain, and extend.
+
+---
+
+# Event Flow
+
+> **Sequence Diagram Placeholder**
+
+_Insert sequence diagram here (`docs/event-flow.png`)_
+
+A typical monitoring event flows through the following stages:
+
+1. A telemetry producer publishes operational metrics.
+    
+2. Amazon EventBridge routes the event to the monitoring Lambda function.
+    
+3. The Lambda function validates the incoming payload.
+    
+4. Metrics are evaluated against predefined thresholds.
+    
+5. If no issue exists, the event is logged and processing completes.
+    
+6. If a threshold is exceeded, an incident record is created.
+    
+7. The incident is stored in DynamoDB.
+    
+8. An alert notification is published through SNS.
+    
+9. The alert is forwarded to SQS for asynchronous downstream processing.
+    
+10. CloudWatch automatically records logs and execution metrics.
+    
+
+---
+
+# Features
+
+- Real-time telemetry processing
+    
+- Event-driven architecture
+    
+- Automatic incident detection
+    
+- Configurable monitoring thresholds
+    
+- Persistent incident storage
+    
+- Asynchronous notification workflows
+    
+- Serverless infrastructure
+    
+- Infrastructure as Code (AWS CDK)
+    
+- GitHub Actions deployment pipeline
+    
+- CloudWatch logging and monitoring
+    
+- Modular application architecture
+    
+- Environment-based configuration
+    
+- Automatic scalability
+    
+- Fault-tolerant messaging pipeline
+    
+- Fully managed AWS services
+    
+
+---
+
+# AWS Services Used
+
+## AWS Lambda
+
+AWS Lambda serves as the core processing engine for the platform.
+
+Each telemetry event triggers a Lambda invocation where incoming metrics are validated, analyzed, and evaluated against monitoring thresholds. Depending on the evaluation results, Lambda either completes successfully or creates an operational incident.
+
+Using Lambda eliminates the need to provision or manage application servers while allowing the platform to automatically scale according to incoming traffic.
+
+---
+
+## Amazon EventBridge
+
+EventBridge acts as the event ingestion layer.
+
+Telemetry events generated by monitored systems are delivered to EventBridge, which routes them directly to the processing Lambda. Scheduled health checks can also be configured using EventBridge rules, allowing the platform to perform periodic monitoring without external schedulers.
+
+---
+
+## Amazon DynamoDB
+
+Detected incidents are persisted inside DynamoDB.
+
+Each incident contains information including:
+
+- Incident ID
+    
+- Service name
+    
+- Metric type
+    
+- Metric value
+    
+- Severity
+    
+- Detection timestamp
+    
+- Current status
+    
+
+Maintaining a persistent incident history enables future analytics, dashboards, and reporting.
+
+---
+
+## Amazon SNS
+
+SNS distributes incident notifications whenever a monitoring threshold is exceeded.
+
+Multiple subscribers can be attached to the same topic, enabling future integrations such as:
+
+- Email alerts
+    
+- SMS notifications
+    
+- Slack webhooks
+    
+- Microsoft Teams
+    
+- PagerDuty
+    
+- Additional Lambda functions
+    
+
+The publisher remains unaware of subscribers, creating a loosely coupled notification architecture.
+
+---
+
+## Amazon SQS
+
+Rather than processing every downstream action synchronously, alerts are also placed onto an SQS queue.
+
+Queue-based messaging improves reliability by buffering incoming alerts during traffic spikes while allowing additional processing services to consume incidents independently.
+
+This pattern increases system resilience and improves scalability.
+
+---
+
+## Amazon CloudWatch
+
+CloudWatch provides operational visibility into the entire application.
+
+Execution logs generated by Lambda are automatically stored, allowing developers to inspect incoming events, troubleshoot failures, and monitor processing activity.
+
+CloudWatch metrics can also be used to monitor:
+
+- Invocation count
+    
+- Execution duration
+    
+- Error rate
+    
+- Success rate
+    
+- Concurrent executions
+    
+
+---
+
+## AWS CDK
+
+All cloud infrastructure is defined programmatically using AWS CDK.
+
+Instead of manually creating AWS resources through the console, every service is described as code, allowing infrastructure to be version controlled, reproduced consistently, and deployed automatically.
+
+---
+
+# Example Telemetry Event
+
+```json
+{
+  "service": "checkout-api",
+  "cpu": 92,
+  "memory": 71,
+  "disk": 38,
+  "latency": 420
+}
+```
+
+---
+
+# Incident Detection
+
+Each telemetry event is evaluated against configurable monitoring thresholds.
+
+Example rules:
+
+|Metric|Threshold|Severity|
+|---|--:|---|
+|CPU Usage|>80%|High|
+|Memory Usage|>85%|High|
+|Disk Usage|>90%|Critical|
+|API Latency|>300 ms|Warning|
+
+If one or more thresholds are exceeded, the event is classified as an incident.
+
+Example incident record:
+
+```json
+{
+  "incident_id": "checkout-api-1720001234",
+  "service": "checkout-api",
+  "metric": "CPU",
+  "value": 92,
+  "severity": "High",
+  "status": "Open",
+  "timestamp": "2026-06-24T18:30:00Z"
+}
+```
+
+---
+
+# Project Structure
+
+```text
+cloud-monitoring-alerting-platform/
+
+├── lambda/
+│   ├── telemetry_processor.py
+│   ├── detection_engine.py
+│   └── notification_service.py
+│
+├── infrastructure/
+│   ├── monitoring_stack.py
+│   └── app.py
+│
+├── tests/
+│
+├── docs/
+│   ├── architecture.png
+│   ├── event-flow.png
+│   ├── deployment.png
+│   └── cloudwatch-dashboard.png
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+│
+├── requirements.txt
+└── README.md
+```
+
+---
+
+# Deployment
+
+The infrastructure is deployed entirely through AWS CDK.
+
+```bash
+git clone https://github.com/yourusername/cloud-monitoring-alerting-platform.git
+
+cd cloud-monitoring-alerting-platform
+
+python -m venv .venv
+
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+cdk bootstrap
+
+cdk synth
+
+cdk deploy
+```
+
+Once deployment completes, AWS automatically provisions all required resources including Lambda, DynamoDB, EventBridge, SNS, SQS, IAM roles, and CloudWatch integration.
+
+---
+
+# CI/CD
+
+The project includes a GitHub Actions workflow that automates deployment.
+
+Whenever code is pushed to the main branch, the workflow:
+
+1. Checks out the repository.
+    
+2. Installs project dependencies.
+    
+3. Configures AWS credentials.
+    
+4. Synthesizes the CDK application.
+    
+5. Deploys the infrastructure automatically.
+    
+
+This approach ensures that infrastructure changes remain version controlled and consistently deployed.
+
+> **CI/CD Workflow Placeholder**
+
+_Insert GitHub Actions workflow screenshot (`docs/github-actions.png`)_
+
+---
+
+# Scalability
+
+The platform is designed around managed AWS services that scale automatically.
+
+- AWS Lambda automatically provisions additional execution environments as event volume increases.
+    
+- DynamoDB supports on-demand scaling for read and write throughput.
+    
+- SNS distributes notifications to multiple subscribers without additional application logic.
+    
+- SQS buffers traffic spikes and decouples downstream consumers from the primary processing workflow.
+    
+- EventBridge reliably routes events without requiring dedicated messaging infrastructure.
+    
+
+As a result, the platform can process increasing event volumes without requiring manual server management.
+
+---
+
+# Security Considerations
+
+Several cloud security best practices were incorporated during development:
+
+- IAM least-privilege permissions
+    
+- Environment variables for configuration
+    
+- No hardcoded AWS credentials
+    
+- Infrastructure managed through code
+    
+- Service-to-service authentication using IAM roles
+    
+- CloudWatch logging for operational auditing
+    
+
+---
+
+# Future Enhancements
+
+Potential improvements include:
+
+- Slack and Microsoft Teams notifications
+    
+- PagerDuty integration
+    
+- AWS X-Ray distributed tracing
+    
+- CloudWatch Alarms
+    
+- Dead Letter Queue (DLQ) support
+    
+- REST API for incident management
+    
+- Real-time monitoring dashboard
+    
+- Grafana visualization
+    
+- Multi-region deployment
+    
+- Machine learning-based anomaly detection
+    
+- Historical analytics and reporting
+    
+- Role-based access control (RBAC)
+    
+
+---
+
+# Lessons Learned
+
+Developing this project provided hands-on experience with modern AWS cloud architecture and event-driven application design.
+
+Key takeaways include:
+
+- Designing scalable serverless systems
+    
+- Building loosely coupled architectures using messaging services
+    
+- Deploying infrastructure through Infrastructure as Code
+    
+- Managing cloud resources programmatically with AWS CDK
+    
+- Implementing automated deployment pipelines
+    
+- Designing resilient asynchronous workflows
+    
+- Monitoring distributed systems using CloudWatch
+    
+- Applying AWS best practices for security and scalability
+    
+
+This project demonstrates how multiple AWS managed services can be combined to build a production-style monitoring platform that is scalable, maintainable, and fully automated.
